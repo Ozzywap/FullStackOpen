@@ -1,51 +1,94 @@
-import { useState } from 'react'
+import { useState } from "react";
 
-const Display = (props) => <div>{props.text}</div>
-
-const Button = (props) => (
-  <button onClick={props.handleClick}>
-    {props.text}
-  </button>
-)
+const Display = (props) => <div>{props.text}</div>;
 
 const Result = (props) => {
-  if (props.guess === props.num){
-  return(<div>
-    <Display text='You guessed correctly!'/>
-  </div>
-  )}
+  if (props.result) {
+    return (
+      <div>
+        <Display text="You guessed correctly!" />
+        <button onClick={props.reset}>play again</button>
+      </div>
+    );
+  }
   return (
     <div>
-    <Display text='You failed!'/>
-  </div>
-  )
-}
+      <div>{`You failed! The number was ${props.guess}`}</div>
+      <button onClick={props.reset}>play again</button>
+    </div>
+  );
+};
 
 const App = (props) => {
+  const [userGuess, updateUserGuess] = useState("");
+  const [value, updateValue] = useState(props.num);
+  const [guessResult, updateGuessResult] = useState(false);
+  const [userGuessed, updateUserGuessed] = useState(false);
 
-  const [guess, updateGuess] = useState(1)
-  const plus1 = () => updateGuess(Math.min(10, guess + 1))
-  const minus1 = () => updateGuess(Math.max(1, guess - 1))
-  // const checkGuess = () => {
-  //   if(guess === props.num) {
-  //     return (<div>correct guess</div>)
-  //   } else{
-  //     return (<div>
-  //       you failed
-  //   </div>)
-  //   }
-  // }
-  
+  const displayResult = () => {
+    if (userGuessed) {
+      return <Result result={guessResult} reset={reset} guess={value} />;
+    }
+  };
+
+  const displaySubmitBtn = () => {
+    if (!userGuessed) {
+      return (
+        <div>
+          <form onSubmit={makeGuess}>
+            <div>
+              guess:{" "}
+              <input
+                type="number"
+                value={userGuess}
+                onChange={handleGuessChange}
+              />
+            </div>
+          </form>
+          <button type="submit" onClick={makeGuess}>
+            submit
+          </button>
+        </div>
+      );
+    }
+  };
+
+  const pickRandom = () => {
+    while (true) {
+      const possibleNext = props.getRandomInt(1, 10);
+      if (possibleNext !== value) {
+        return possibleNext;
+      }
+    }
+  };
+
+  const reset = () => {
+    const newGuess = pickRandom();
+    updateValue(newGuess);
+    updateGuessResult(false);
+    updateUserGuessed(false);
+  };
+
+  const makeGuess = (event) => {
+    event.preventDefault();
+    updateUserGuessed(true);
+    Number(userGuess) === value
+      ? updateGuessResult(true)
+      : updateGuessResult(false);
+    updateUserGuess("");
+  };
+
+  const handleGuessChange = (event) => {
+    updateUserGuess(event.target.value);
+  };
+
   return (
     <div>
-      <p>Guess a number between 1 and 10. Press done when ready</p>
-      <p>{guess}</p>
-      <Button handleClick={plus1} text='+1'/>
-      <Button handleClick={minus1} text='-1'/>
-      <Result guess={guess} num = {props.num}/>
-      {/* <Button handleClick={checkGuess} text='done' /> */}
+      <p>Guess a number between 1 and 10</p>
+      {displaySubmitBtn()}
+      {displayResult()}
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
