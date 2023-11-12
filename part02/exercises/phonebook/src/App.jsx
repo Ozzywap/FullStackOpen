@@ -36,11 +36,29 @@ const Persons = (props) => (
   </div>
 );
 
+const SuccessNotification = ({ message }) => {
+  if (message === null) {
+    return null;
+  }
+
+  return <div className="success">{message}</div>;
+};
+
+const ErrorNotification = ({ message }) => {
+  if (message === null) {
+    return null;
+  }
+
+  return <div className="error">{message}</div>;
+};
+
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [newFilter, setNewFilter] = useState("");
+  const [sucessMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     personServices.getAll().then((initialPersons) => {
@@ -54,17 +72,14 @@ const App = () => {
       name: newName,
       number: newNumber,
     };
+    const msg = `${personObject.name} is already added to phonebook, replace the old number with a new one?`;
 
     if (
       persons.some(
         (person) => person.name.toLowerCase() === newName.toLowerCase()
       )
     ) {
-      if (
-        window.confirm(
-          `${personObject.name} is already added to phonebook, replace the old number with a new one?`
-        )
-      ) {
+      if (window.confirm(msg)) {
         const existingPerson = persons.find(
           (person) => person.name.toLowerCase() === newName.toLowerCase()
         );
@@ -76,12 +91,19 @@ const App = () => {
                 person.id !== existingPerson.id ? person : updatedPerson
               )
             );
+            displaySuccessMsg(`Updated ${newName}`);
+          })
+          .catch(() => {
+            displayErrorMsg(
+              `Information of ${newName} has already been removed from server`
+            );
           });
       }
     } else {
       personServices.create(personObject).then((returnedPerson) => {
         setPersons(persons.concat(returnedPerson));
       });
+      displaySuccessMsg(`Added ${newName}`);
     }
     setNewNumber("");
     setNewName("");
@@ -90,10 +112,32 @@ const App = () => {
   const deletePerson = (id) => {
     const person = persons.find((person) => person.id === id);
     if (window.confirm(`delete ${person.name}`)) {
-      personServices.deleteP(id).then((data) => {
-        setPersons(persons.filter((person) => person.id !== id));
-      });
+      personServices
+        .deleteP(id)
+        .then(() => {
+          setPersons(persons.filter((person) => person.id !== id));
+          displaySuccessMsg(`Deleted ${person.name}`);
+        })
+        .catch(() => {
+          displayErrorMsg(
+            `Information of ${person.name} has already been removed from server`
+          );
+        });
     }
+  };
+
+  const displaySuccessMsg = (msg) => {
+    setSuccessMessage(msg);
+    setTimeout(() => {
+      setSuccessMessage(null);
+    }, 5000);
+  };
+
+  const displayErrorMsg = (msg) => {
+    setErrorMessage(msg);
+    setTimeout(() => {
+      setErrorMessage(null);
+    }, 5000);
   };
 
   const handleNameChange = (event) => {
@@ -111,6 +155,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <SuccessNotification message={sucessMessage} />
+      <ErrorNotification message={errorMessage} />
       <Filter newFilter={newFilter} handleFilterChange={handleFilterChange} />
 
       <h3>Add a new</h3>
