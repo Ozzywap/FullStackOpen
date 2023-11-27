@@ -21,8 +21,38 @@ const Board = ({ xIsNext, squares, onPlay }) => {
     if (squares[i] || calculateWinner(squares)[0]) return;
     const nextSquares = squares.slice();
     xIsNext ? (nextSquares[i] = "X") : (nextSquares[i] = "O");
-    onPlay(nextSquares);
+    if (calculateWinner(nextSquares)[0]) {
+      // if game over
+      onPlay(nextSquares);
+    } else if (nextSquares.every((pos) => pos !== null)) {
+      // if game drawn
+      onPlay(nextSquares);
+    } else {
+      onPlay(nextTurn(nextSquares));
+    }
   }
+
+  const nextTurn = (nextSquares) => {
+    const pos = pickRandom(nextSquares);
+    nextSquares[pos] = "O";
+    return nextSquares;
+  };
+
+  const pickNextAvailable = (nextSquares) => {
+    for (let i = 0; i < nextSquares.length; i++) {
+      if (!nextSquares[i]) {
+        return i;
+      }
+    }
+  };
+
+  const pickRandom = (nextSquares) => {
+    while (true) {
+      const possibleNext = Math.floor(Math.random() * nextSquares.length);
+      console.log("trying ", possibleNext);
+      if (!nextSquares[possibleNext]) return possibleNext;
+    }
+  };
 
   const [winner, winningSquares] = calculateWinner(squares);
   let status;
@@ -110,7 +140,7 @@ const Game = () => {
   return (
     <div className="game">
       <div className="game-board">
-        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
+        <Board xIsNext={true} squares={currentSquares} onPlay={handlePlay} />
       </div>
       <div className="game-info">
         <ul>{moves}</ul>
