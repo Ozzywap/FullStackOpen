@@ -149,7 +149,7 @@ const Game = () => {
   );
 };
 
-const minimax = (gameState) => {
+const minimax = (gameState, alpha, beta) => {
   const terminal = terminalState(gameState);
   if (terminal[0]) {
     return { value: terminal[1], move: null };
@@ -161,10 +161,14 @@ const minimax = (gameState) => {
     const possibleActions = actions(gameState);
     for (let i = 0; i < possibleActions.length; i++) {
       const action = possibleActions[i];
-      const value = minimax(result(gameState, action)).value;
+      const value = minimax(result(gameState, action), alpha, beta).value;
       if (value > bestValue) {
         bestValue = value;
         bestMove = action;
+      }
+      alpha = Math.max(alpha, value);
+      if (beta <= alpha) {
+        break;
       }
     }
     return { value: bestValue, move: bestMove };
@@ -174,10 +178,14 @@ const minimax = (gameState) => {
     const possibleActions = actions(gameState);
     for (let i = 0; i < possibleActions.length; i++) {
       const action = possibleActions[i];
-      const value = minimax(result(gameState, action)).value;
+      const value = minimax(result(gameState, action), alpha, beta).value;
       if (value < bestValue) {
         bestValue = value;
         bestMove = action;
+      }
+      beta = Math.min(beta, value);
+      if (beta <= alpha) {
+        break;
       }
     }
     return { value: bestValue, move: bestMove };
