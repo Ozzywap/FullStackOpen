@@ -33,8 +33,8 @@ const Board = ({ xIsNext, squares, onPlay }) => {
   }
 
   const nextTurn = (nextSquares) => {
-    const pos = pickRandom(nextSquares);
-    nextSquares[pos] = "O";
+    const { move } = minimax(nextSquares);
+    nextSquares[move] = "O";
     return nextSquares;
   };
 
@@ -152,23 +152,35 @@ const Game = () => {
 const minimax = (gameState) => {
   const terminal = terminalState(gameState);
   if (terminal[0]) {
-    return terminal[1];
+    return { value: terminal[1], move: null };
   }
 
   if (player(gameState)) {
-    let value = -Infinity;
+    let bestValue = -Infinity;
+    let bestMove = null;
     const possibleActions = actions(gameState);
     for (let i = 0; i < possibleActions.length; i++) {
-      value = Math.max(value, minimax(result(gameState, possibleActions[i])));
+      const action = possibleActions[i];
+      const value = minimax(result(gameState, action)).value;
+      if (value > bestValue) {
+        bestValue = value;
+        bestMove = action;
+      }
     }
-    return value;
+    return { value: bestValue, move: bestMove };
   } else {
-    let value = Infinity;
+    let bestValue = Infinity;
+    let bestMove = null;
     const possibleActions = actions(gameState);
     for (let i = 0; i < possibleActions.length; i++) {
-      value = Math.min(value, minimax(result(gameState, possibleActions[i])));
+      const action = possibleActions[i];
+      const value = minimax(result(gameState, action)).value;
+      if (value < bestValue) {
+        bestValue = value;
+        bestMove = action;
+      }
     }
-    return value;
+    return { value: bestValue, move: bestMove };
   }
 };
 
